@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EHS Risk Assessment Module Prototype</title>
+    <title>EHS Risk Assessment Module</title>
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -99,63 +99,16 @@
         .status-revision { background-color: #ffc107; color: black !important; }
         .status-overdue { background-color: #fd7e14; }
         
-        #riskMatrixChart {
-            border: 1px solid #dee2e6;
-            border-collapse: separate;
-            border-spacing: 0;
-            border-radius: .5rem;
-            overflow: hidden;
-        }
-        
-        #riskMatrixChart th, #riskMatrixChart td {
-            text-align: center;
-            vertical-align: middle;
-            width: 20%;
-            height: 55px;
-            position: relative;
-        }
-        #riskMatrixChart .point {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            background-color: rgba(0,0,0,0.8);
-            border: 2px solid white;
-            box-shadow: 0 0 8px rgba(0,0,0,0.6);
-            color: white;
-            font-size: 0.8em;
-            font-weight: bold;
-        }
-        
-        .locked-field {
-            background-color: #e9ecef;
-            cursor: not-allowed;
-        }
-
-        .hierarchy-guidance {
-            font-size: 0.875em;
-            color: #6c757d;
-        }
-        
-        /* New styles for improved matrix config */
-        #risk-level-editor .row {
-            align-items: center;
-        }
-        .matrix-preview-container .table {
-             transition: background-color 0.3s ease;
-        }
-         .matrix-preview-container td {
+        .matrix-preview-container td {
             font-weight: 500;
             color: rgba(0,0,0,0.7);
             transition: background-color 0.3s ease;
         }
-
+        .accordion-button:not(.collapsed) {
+            background-color: #f8f9fa;
+            color: #000;
+            box-shadow: none;
+        }
     </style>
 </head>
 <body>
@@ -169,7 +122,7 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="main-nav-tabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <a class="nav-link active" id="nav-assessments-tab" data-bs-toggle="tab" href="#riskAssessmentsTab" role="tab" aria-controls="riskAssessmentsTab" aria-selected="true">Risk Assessment Listing</a>
+                        <a class="nav-link active" id="nav-assessments-tab" data-bs-toggle="tab" href="#riskAssessmentsTab" role="tab" aria-controls="riskAssessmentsTab" aria-selected="true">Risk Assessments</a>
                     </li>
                     <li class="nav-item" role="presentation">
                         <a class="nav-link" id="nav-admin-tab" data-bs-toggle="tab" href="#adminConfigTab" role="tab" aria-controls="adminConfigTab" aria-selected="false">Admin Configuration</a>
@@ -186,37 +139,34 @@
     <main class="container-fluid p-4">
 
         <div class="tab-content" id="main-nav-tabContent">
-            <!-- ===================================== -->
-            <!-- TAB 1: RISK ASSESSMENT LIFECYCLE      -->
-            <!-- ===================================== -->
+            <!-- TAB 1: RISK ASSESSMENT LISTING -->
             <div class="tab-pane fade show active" id="riskAssessmentsTab" role="tabpanel" aria-labelledby="nav-assessments-tab">
                  <div class="d-flex justify-content-between align-items-center mb-4">
                      <h2 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Risk Assessment Listing</h2>
-                     <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#createAssessmentModal"><i class="fas fa-plus me-2"></i>Create Assessment</button>
+                     <button class="btn btn-primary btn-lg"><i class="fas fa-plus me-2"></i>Create Assessment</button>
                  </div>
                  
-                 <!-- Listing Page -->
                  <div class="card">
                      <div class="card-body">
                          <div class="table-responsive">
                              <table class="table table-hover align-middle">
                                  <thead class="table-light">
                                      <tr>
-                                         <th>ID <i class="fas fa-sort"></i></th>
-                                         <th>Name / Task Assessed <i class="fas fa-sort"></i></th>
-                                         <th>Assessment Date <i class="fas fa-sort"></i></th>
-                                         <th>Status <i class="fas fa-sort"></i></th>
-                                         <th>Overall Risk <i class="fas fa-sort"></i></th>
-                                         <th>Assessed By <i class="fas fa-sort"></i></th>
-                                         <th>Next Review <i class="fas fa-sort"></i></th>
+                                         <th>ID</th>
+                                         <th>Name / Task Assessed</th>
+                                         <th>Assessment Date</th>
+                                         <th>Status</th>
+                                         <th>Overall Risk</th>
+                                         <th>Assessed By</th>
+                                         <th>Next Review</th>
                                          <th class="text-center">Actions</th>
                                      </tr>
                                  </thead>
                                  <tbody>
-                                     <tr><td>RA-00125</td><td>Welding Operations in Workshop B</td><td>2025-06-08</td><td><span class="badge rounded-pill status-in-review text-white">In Review</span></td><td><span class="badge risk-badge-critical text-white">Critical</span></td><td>John Doe</td><td>2026-06-08</td><td class="text-center"><a href="Rsik Assessment View Page.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a> <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf"></i></button></td></tr>
-                                     <tr><td>RA-00124</td><td>Forklift Operation in Warehouse</td><td>2025-05-20</td><td><span class="badge rounded-pill status-approved text-white">Approved</span></td><td><span class="badge risk-badge-medium text-black">Medium</span></td><td>Jane Smith</td><td>2026-05-20</td><td class="text-center"><a href="Rsik Assessment View Page.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a> <button class="btn btn-sm btn-outline-secondary" disabled><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf"></i></button></td></tr>
-                                     <tr><td>RA-00123</td><td>Chemical Handling in Lab</td><td>2025-05-15</td><td><span class="badge rounded-pill status-draft text-white">Draft</span></td><td><span class="badge risk-badge-high text-white">High</span></td><td>John Doe</td><td>2026-05-15</td><td class="text-center"><a href="Rsik Assessment View Page.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf"></i></button></td></tr>
-                                     <tr><td>RA-00122</td><td>Working at Height - Roof Repair</td><td>2024-06-01</td><td><span class="badge rounded-pill status-overdue text-white">Overdue</span></td><td><span class="badge risk-badge-critical text-white">Critical</span></td><td>Peter Jones</td><td>2025-06-01</td><td class="text-center"><a href="Rsik Assessment View Page.html" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary"><i class="fas fa-file-pdf"></i></button></td></tr>
+                                     <tr><td>RA-00125</td><td>Welding Operations in Workshop B</td><td>2025-06-08</td><td><span class="badge rounded-pill status-in-review text-white">In Review</span></td><td><span class="badge risk-badge-critical text-white">Critical</span></td><td>John Doe</td><td>2026-06-08</td><td class="text-center"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit" disabled><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export PDF"><i class="fas fa-file-pdf"></i></button></td></tr>
+                                     <tr><td>RA-00124</td><td>Forklift Operation in Warehouse</td><td>2025-05-20</td><td><span class="badge rounded-pill status-approved text-white">Approved</span></td><td><span class="badge risk-badge-medium text-black">Medium</span></td><td>Jane Smith</td><td>2026-05-20</td><td class="text-center"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit" disabled><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export PDF"><i class="fas fa-file-pdf"></i></button></td></tr>
+                                     <tr><td>RA-00123</td><td>Chemical Handling in Lab</td><td>2025-05-15</td><td><span class="badge rounded-pill status-draft text-white">Draft</span></td><td><span class="badge risk-badge-high text-white">High</span></td><td>John Doe</td><td>2026-05-15</td><td class="text-center"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export PDF"><i class="fas fa-file-pdf"></i></button></td></tr>
+                                     <tr><td>RA-00122</td><td>Working at Height - Roof Repair</td><td>2024-06-01</td><td><span class="badge rounded-pill status-overdue text-white">Overdue</span></td><td><span class="badge risk-badge-critical text-white">Critical</span></td><td>Peter Jones</td><td>2025-06-01</td><td class="text-center"><button class="btn btn-sm btn-outline-primary" data-bs-toggle="tooltip" title="View"><i class="fas fa-eye"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-secondary" data-bs-toggle="tooltip" title="Export PDF"><i class="fas fa-file-pdf"></i></button></td></tr>
                                  </tbody>
                              </table>
                          </div>
@@ -224,35 +174,115 @@
                  </div>
             </div>
 
-            <!-- =================================== -->
-            <!-- TAB 2: MASTER DATA & CONFIGURATION  -->
-            <!-- =================================== -->
+            <!-- TAB 2: ADMIN CONFIGURATION -->
             <div class="tab-pane fade" id="adminConfigTab" role="tabpanel" aria-labelledby="nav-admin-tab">
                 <h2 class="mb-4"><i class="fas fa-cogs me-2"></i>Master Data & Configuration</h2>
                 <div class="card">
                     <div class="card-header">
                         <ul class="nav nav-pills card-header-pills">
+                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#config-templates">Template Builder</a></li>
+                            <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#config-matrix">Risk Matrix</a></li>
                             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#config-severity">Severity Levels</a></li>
                             <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#config-likelihood">Likelihood Levels</a></li>
-                            <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#config-matrix">Risk Score Matrix</a></li>
                         </ul>
                     </div>
                     <div class="card-body p-4">
                         <div class="tab-content">
-                            <!-- Severity Tab -->
+                            <!-- Template Management Tab -->
+                            <div class="tab-pane fade show active" id="config-templates">
+                                <!-- View 1: Template Listing -->
+                                <div id="template-listing-view">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5>Assessment Templates</h5>
+                                            <p class="text-muted mb-0">Manage your library of assessment templates.</p>
+                                        </div>
+                                        <button id="show-builder-btn" class="btn btn-primary"><i class="fas fa-plus me-2"></i>Create New Template</button>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table table-hover align-middle">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>Template Name</th>
+                                                    <th>Description</th>
+                                                    <th class="text-center">Questions</th>
+                                                    <th>Last Modified</th>
+                                                    <th class="text-center">Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="templates-table-body">
+                                                <!-- Template rows will be dynamically inserted here -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="templates-empty-state" class="text-center p-5 border bg-light rounded" style="display: none;">
+                                        <i class="fas fa-file-alt fa-3x text-muted"></i>
+                                        <h5 class="mt-3">No templates found</h5>
+                                        <p class="text-muted">Get started by creating your first template.</p>
+                                    </div>
+                                </div>
+
+                                <!-- View 2: Template Builder/Editor -->
+                                <div id="template-builder-view" style="display: none;">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <div>
+                                            <h5 id="builder-title">Create New Template</h5>
+                                            <p class="text-muted mb-0">Design a new assessment template question by question.</p>
+                                        </div>
+                                        <div>
+                                            <button id="back-to-list-btn" class="btn btn-secondary me-2"><i class="fas fa-arrow-left me-2"></i>Back to List</button>
+                                            <button id="save-template-btn" class="btn btn-primary"><i class="fas fa-save me-2"></i>Save Template</button>
+                                        </div>
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-lg-8">
+                                            <div class="card bg-light border">
+                                                <div class="card-body">
+                                                    <h6>Template Details</h6>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3"><label for="template-name" class="form-label">Template Name</label><input type="text" id="template-name" class="form-control" placeholder="e.g., General Workshop Safety"></div>
+                                                        <div class="col-md-6 mb-3"><label for="template-description" class="form-label">Description</label><input type="text" id="template-description" class="form-control" placeholder="A brief description"></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="d-flex justify-content-between align-items-center mt-4 mb-3">
+                                                <h6 class="mb-0">Template Questions</h6>
+                                                <button id="add-question-btn" class="btn btn-success btn-sm"><i class="fas fa-plus me-2"></i>Add Question</button>
+                                            </div>
+                                            <div class="accordion" id="questions-accordion-container">
+                                                <div id="builder-empty-state" class="text-center p-5 border bg-light rounded">
+                                                    <i class="fas fa-file-alt fa-3x text-muted"></i>
+                                                    <h5 class="mt-3">No questions yet</h5>
+                                                    <p class="text-muted">Click "Add Question" to start building your template.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-lg-4">
+                                            <div class="card sticky-top" style="top: 6rem;">
+                                                <div class="card-body">
+                                                    <h6 class="card-title">Template Summary</h6>
+                                                    <p class="mb-2">Total Questions</p>
+                                                    <h3 id="total-questions-summary" class="fw-bold text-primary">0</h3>
+                                                    <hr>
+                                                    <p class="mb-2">Categories in Use</p>
+                                                    <div id="category-summary-list" class="d-flex flex-wrap gap-2">
+                                                        <small class="text-muted">No questions added yet.</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Other Config Tabs... -->
                             <div class="tab-pane fade" id="config-severity">
                                 <h5>Configure Severity Levels</h5>
                                 <p class="text-muted">Define the levels of severity, their scores, and descriptions.</p>
                                 <div class="table-responsive">
                                     <table class="table table-bordered table-hover">
                                         <thead class="table-light">
-                                            <tr>
-                                                <th>Numerical Score</th>
-                                                <th>Name</th>
-                                                <th>Description</th>
-                                                <th>Category Association</th>
-                                                <th class="text-center">Actions</th>
-                                            </tr>
+                                            <tr><th>Score</th><th>Name</th><th>Description</th><th>Category</th><th class="text-center">Actions</th></tr>
                                         </thead>
                                         <tbody>
                                             <tr><td>1</td><td>Insignificant</td><td>No injury or health effect. No environmental impact.</td><td><span class="badge risk-badge-low text-white">Low</span></td><td class="text-center"><button class="btn btn-sm btn-outline-primary"><i class="fas fa-pencil-alt"></i></button> <button class="btn btn-sm btn-outline-danger"><i class="fas fa-trash-alt"></i></button></td></tr>
@@ -265,7 +295,6 @@
                                 </div>
                                 <button class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Severity Level</button>
                             </div>
-                            <!-- Likelihood Tab -->
                             <div class="tab-pane fade" id="config-likelihood">
                                 <h5>Configure Likelihood Levels</h5>
                                 <p class="text-muted">Define the levels of likelihood (occurrence), their scores, and descriptions.</p>
@@ -285,20 +314,14 @@
                                 </div>
                                 <button class="btn btn-primary"><i class="fas fa-plus me-1"></i> Add Likelihood Level</button>
                             </div>
-                            
-                            <!-- NEW Risk Matrix Tab -->
-                            <div class="tab-pane fade show active" id="config-matrix">
+                            <div class="tab-pane fade" id="config-matrix">
                                 <h5>Configure the Risk Score Matrix</h5>
                                 <p class="text-muted">Define score ranges and assign colors. The preview matrix will update in real-time.</p>
-                                
                                 <div class="card bg-light p-3 mb-4 border">
                                     <h6>Define Score Ranges & Colors</h6>
-                                    <div id="risk-level-editor">
-                                        <!-- This will be populated by JavaScript -->
-                                    </div>
+                                    <div id="risk-level-editor"></div>
                                     <button id="add-level-btn" class="btn btn-sm btn-outline-primary mt-2" style="max-width: 150px;"><i class="fas fa-plus me-1"></i> Add Level</button>
                                 </div>
-                                
                                 <div class="matrix-preview-container">
                                     <h6>Live Preview Matrix (Severity x Likelihood)</h6>
                                     <div class="table-responsive">
@@ -308,9 +331,7 @@
                                                     <th class="bg-light align-middle" rowspan="2">Likelihood</th>
                                                     <th class="bg-light" colspan="5">Severity</th>
                                                 </tr>
-                                                <tr>
-                                                    <th>1</th><th>2</th><th>4</th><th>8</th><th>16</th>
-                                                </tr>
+                                                <tr><th>1</th><th>2</th><th>4</th><th>8</th><th>16</th></tr>
                                             </thead>
                                             <tbody>
                                                 <tr><th class="table-light">5</th><td>5</td><td>10</td><td>20</td><td>40</td><td>80</td></tr>
@@ -331,60 +352,22 @@
                 </div>
             </div>
         </div>
-
     </main>
-
-    <!-- ================== -->
-    <!--      MODALS        -->
-    <!-- ================== -->
-    <!-- Create Assessment Modal -->
-    <div class="modal fade" id="createAssessmentModal" tabindex="-1" aria-labelledby="createAssessmentModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header"><h5 class="modal-title" id="createAssessmentModalLabel"><i class="fas fa-plus-circle me-2"></i>Create New Risk Assessment</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
-          <div class="modal-body">
-            <form>
-              <div class="row">
-                  <div class="col-md-8 mb-3"><label for="assessmentName" class="form-label">Name*</label><input type="text" class="form-control" id="assessmentName" value="Risk Assessment for China Plant" required></div>
-                  <div class="col-md-4 mb-3"><label class="form-label">Type</label><div class="form-check form-switch fs-5"><input class="form-check-input" type="checkbox" id="typeSwitch" checked><label class="form-check-label" for="typeSwitch">Internal / External</label></div></div>
-              </div>
-              <div id="internal-fields">
-                  <div class="row"><div class="col-md-6 mb-3"><label for="department" class="form-label">Department</label><select id="department" class="form-select"><option>Maintenance</option><option>Production</option></select></div><div class="col-md-6 mb-3"><label for="plant" class="form-label">Plant</label><select id="plant" class="form-select"><option>Main Plant</option></select></div></div>
-              </div>
-               <div class="mb-3"><label for="source" class="form-label">Source</label><input type="text" class="form-control locked-field" id="source" value="Incident #I-1024" disabled></div>
-               <div class="row"><div class="col-md-6 mb-3"><label for="assessors" class="form-label">Assessor(s)</label><select id="assessors" class="form-select" multiple><option selected>John Doe</option><option>Jane Smith</option></select></div><div class="col-md-6 mb-3"><label for="approver" class="form-label">Approver*</label><select id="approver" class="form-select" required><option>Admin User</option></select></div></div>
-              <div class="row"><div class="col-md-6 mb-3"><label for="assessmentDate" class="form-label">Assessment Date</label><input type="date" class="form-control" id="assessmentDate" value="2025-06-08"></div><div class="col-md-6 mb-3"><label for="reviewDate" class="form-label">Next Review Date</label><input type="date" class="form-control" id="reviewDate" value="2026-06-08"></div></div>
-              <div class="mb-3"><label for="hazards" class="form-label">High-level Hazard(s)</label><input type="text" class="form-control" id="hazards" value="Hot Work, Manual Handling, Electrical Safety"></div>
-              <div class="mb-3"><label for="questionnaire" class="form-label">Questionnaire / Checklist*</label><select id="questionnaire" class="form-select" required><option>Hot Work Safety Checklist</option></select></div>
-            </form>
-          </div>
-          <div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary">Create and Proceed</button></div>
-        </div>
-      </div>
-    </div>
     
-    <!-- Submit Modal -->
-    <div class="modal fade" id="submitApprovalModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><h5 class="modal-title">Confirm Submission</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Are you sure you want to submit this for approval?</p><p class="text-muted small">Once submitted, the assessment will be locked for editing until the approver takes action.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" data-bs-dismiss="modal">Yes, Submit</button></div></div></div></div>
-
-    <!-- Approve Modal -->
-    <div class="modal fade" id="approveModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-success text-white"><h5 class="modal-title">Confirm Approval</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>You are about to approve this risk assessment.</p><p>The record will be locked and all assigned actions will be activated.</p></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-success" data-bs-dismiss-modal">Confirm Approval</button></div></div></div></div>
-    
-    <!-- Reject Modal -->
-    <div class="modal fade" id="rejectModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-header bg-danger text-white"><h5 class="modal-title">Reject Assessment</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div class="modal-body"><p>Please provide mandatory comments explaining the reason for rejection.</p><textarea id="rejectionComments" class="form-control" rows="4" placeholder="The assessor will be notified with these comments..."></textarea></div><div class="modal-footer"><button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-danger" data-bs-dismiss="modal">Confirm Rejection</button></div></div></div></div>
-
-
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     
-    <!-- Custom JS for dynamic matrix configuration -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // --- Elements ---
+            // --- Initialize Bootstrap Tooltips ---
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+
+            // --- Risk Matrix Configuration Logic ---
             const editor = document.getElementById('risk-level-editor');
             const addLevelBtn = document.getElementById('add-level-btn');
             const previewMatrix = document.getElementById('risk-matrix-preview');
             
-            // --- Initial Data ---
             let riskLevels = [
                 { name: 'Low', min: 1, max: 4, color: '#28a745' },
                 { name: 'Medium', min: 5, max: 10, color: '#ffc107' },
@@ -392,125 +375,295 @@
                 { name: 'Critical', min: 17, max: 80, color: '#dc3545' }
             ];
 
-            // --- Functions ---
-            
-            /**
-             * Updates the preview matrix colors based on the current risk level configuration.
-             */
             function updateMatrixPreview() {
-                // This function might not be defined if the editor is not on the page.
-                if (!editor) return;
+                if (!editor || !previewMatrix) return;
+                const currentConfig = Array.from(editor.querySelectorAll('.risk-level-row')).map(row => ({
+                    name: row.querySelector('.level-name').value,
+                    min: parseInt(row.querySelector('.level-min').value, 10),
+                    max: parseInt(row.querySelector('.level-max').value, 10),
+                    color: row.querySelector('.level-color').value
+                })).filter(c => c.name && !isNaN(c.min) && !isNaN(c.max));
 
-                // 1. Read the current configuration from the editor form
-                const currentConfig = [];
-                editor.querySelectorAll('.risk-level-row').forEach(row => {
-                    const name = row.querySelector('.level-name').value;
-                    const min = parseInt(row.querySelector('.level-min').value, 10);
-                    const max = parseInt(row.querySelector('.level-max').value, 10);
-                    const color = row.querySelector('.level-color').value;
-                    if (name && !isNaN(min) && !isNaN(max)) {
-                        currentConfig.push({ name, min, max, color });
-                    }
-                });
-
-                // 2. Iterate over each cell in the preview matrix
                 previewMatrix.querySelectorAll('tbody td').forEach(cell => {
                     const score = parseInt(cell.textContent, 10);
-                    if (isNaN(score)) return;
-                    
-                    // Find the matching risk level for the cell's score
                     const level = currentConfig.find(l => score >= l.min && score <= l.max);
-                    
-                    // 3. Apply the color
-                    cell.style.backgroundColor = level ? level.color : '#ffffff'; // Default to white if no match
-                    // Determine text color for contrast
-                    if (level) {
-                       cell.style.color = isColorDark(level.color) ? 'white' : 'black';
-                    }
+                    cell.style.backgroundColor = level ? level.color : '#ffffff';
+                    cell.style.color = level && isColorDark(level.color) ? 'white' : 'black';
                 });
             }
             
-            /**
-             * Renders a single row in the risk level editor.
-             * @param {object} level - The risk level data ({name, min, max, color}).
-             */
             function createLevelRow(level) {
                 const row = document.createElement('div');
                 row.className = 'row g-2 mb-2 risk-level-row';
-                
                 row.innerHTML = `
-                    <div class="col-md-3">
-                        <input type="text" class="form-control level-name" placeholder="Level Name" value="${level.name}">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" class="form-control level-min" placeholder="Min" value="${level.min}">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="number" class="form-control level-max" placeholder="Max" value="${level.max}">
-                    </div>
-                    <div class="col-md-2">
-                        <input type="color" class="form-control form-control-color w-100 level-color" value="${level.color}">
-                    </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-sm btn-outline-danger remove-level-btn w-100"><i class="fas fa-trash-alt me-1"></i> Remove</button>
-                    </div>
+                    <div class="col-md-3"><input type="text" class="form-control level-name" placeholder="Level Name" value="${level.name}"></div>
+                    <div class="col-md-2"><input type="number" class="form-control level-min" placeholder="Min" value="${level.min}"></div>
+                    <div class="col-md-2"><input type="number" class="form-control level-max" placeholder="Max" value="${level.max}"></div>
+                    <div class="col-md-2"><input type="color" class="form-control form-control-color w-100 level-color" value="${level.color}"></div>
+                    <div class="col-md-3"><button class="btn btn-sm btn-outline-danger remove-level-btn w-100"><i class="fas fa-trash-alt me-1"></i> Remove</button></div>
                 `;
-                
-                // Add event listener for the remove button
-                row.querySelector('.remove-level-btn').addEventListener('click', () => {
-                    row.remove();
-                    updateMatrixPreview();
-                });
-                
+                row.querySelector('.remove-level-btn').addEventListener('click', () => { row.remove(); updateMatrixPreview(); });
                 return row;
             }
             
-            /**
-             * Re-renders the entire editor based on the riskLevels array.
-             */
             function renderEditor() {
-                if (!editor) return; // Don't run if the editor element doesn't exist
-                editor.innerHTML = ''; // Clear existing content
-                riskLevels.forEach(level => {
-                    editor.appendChild(createLevelRow(level));
-                });
+                if (!editor) return;
+                editor.innerHTML = '';
+                riskLevels.forEach(level => editor.appendChild(createLevelRow(level)));
                 updateMatrixPreview();
             }
 
-            /**
-             * Checks if a hex color is dark to decide on text color (white/black).
-             * @param {string} hexcolor - The color in hex format (e.g., '#ffc107').
-             * @returns {boolean} - True if the color is dark.
-             */
-             function isColorDark(hexcolor) {
+            function isColorDark(hexcolor) {
                 if (!hexcolor) return false;
-                const r = parseInt(hexcolor.slice(1, 3), 16);
-                const g = parseInt(hexcolor.slice(3, 5), 16);
-                const b = parseInt(hexcolor.slice(5, 7), 16);
-                // Formula for luminance
-                const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-                return luma < 140; // Threshold can be adjusted
+                const [r, g, b] = [parseInt(hexcolor.slice(1, 3), 16), parseInt(hexcolor.slice(3, 5), 16), parseInt(hexcolor.slice(5, 7), 16)];
+                return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 140;
             }
 
-
-            // --- Event Listeners ---
-            
-            // Listen for any input changes within the editor to trigger a live update
-            if(editor) {
-                editor.addEventListener('input', updateMatrixPreview);
-            }
-            
-            // Handle adding a new level
-            if(addLevelBtn) {
-                addLevelBtn.addEventListener('click', () => {
-                    const newLevel = { name: '', min: 0, max: 0, color: '#cccccc' };
-                    editor.appendChild(createLevelRow(newLevel));
-                });
-            }
-
-            // --- Initial Setup ---
+            if(editor) editor.addEventListener('input', updateMatrixPreview);
+            if(addLevelBtn) addLevelBtn.addEventListener('click', () => editor.appendChild(createLevelRow({ name: '', min: 0, max: 0, color: '#cccccc' })));
             renderEditor();
 
+            // --- Template Management Logic ---
+            const listingView = document.getElementById('template-listing-view');
+            const builderView = document.getElementById('template-builder-view');
+            const templatesTableBody = document.getElementById('templates-table-body');
+            const templatesEmptyState = document.getElementById('templates-empty-state');
+            const showBuilderBtn = document.getElementById('show-builder-btn');
+            const backToListBtn = document.getElementById('back-to-list-btn');
+            const saveTemplateBtn = document.getElementById('save-template-btn');
+            const builderTitle = document.getElementById('builder-title');
+            const templateNameInput = document.getElementById('template-name');
+            const templateDescInput = document.getElementById('template-description');
+            
+            const questionsContainer = document.getElementById('questions-accordion-container');
+            const addQuestionBtn = document.getElementById('add-question-btn');
+            const builderEmptyState = document.getElementById('builder-empty-state');
+            const totalQuestionsSummary = document.getElementById('total-questions-summary');
+            const categorySummaryList = document.getElementById('category-summary-list');
+
+            let allTemplates = [];
+            let currentTemplate = null;
+            let questionIdCounter = 1;
+            const ehsTypes = {
+                Safety: { icon: 'fa-shield-alt', color: 'primary' },
+                Health: { icon: 'fa-heartbeat', color: 'purple' },
+                Environmental: { icon: 'fa-leaf', color: 'success' }
+            };
+            
+            const initTemplates = () => {
+                const storedTemplates = localStorage.getItem('ehsTemplates');
+                if (!storedTemplates) {
+                    const exampleTemplates = [
+                        {
+                            id: 1, name: 'General Workshop Safety', description: 'Standard safety checks for workshop environments.', lastModified: '2025-08-26',
+                            questions: [
+                                { id: 1, question: "Are all walkways clear of obstructions?", type: "Safety", aspect: "Slips, trips, and falls", impact: "Minor to major injuries", controls: "Daily housekeeping checks" },
+                                { id: 2, question: "Is fire-fighting equipment accessible and inspected?", type: "Safety", aspect: "Fire hazard", impact: "Severe injuries, property damage", controls: "Monthly inspections, clear signage" }
+                            ]
+                        },
+                        {
+                            id: 2, name: 'Chemical Handling & Storage', description: 'Template for areas with chemical usage.', lastModified: '2025-08-25',
+                            questions: [
+                                { id: 1, question: "Are Safety Data Sheets (SDS) available for all chemicals?", type: "Health", aspect: "Chemical exposure", impact: "Acute or chronic health effects", controls: "SDS binder at location" },
+                                { id: 2, question: "Is secondary containment used for liquid chemical storage?", type: "Environmental", aspect: "Chemical spill", impact: "Soil/water contamination", controls: "Spill pallets, bunded areas" }
+                            ]
+                        },
+                        {
+                            id: 3, name: 'Office Ergonomics Assessment', description: 'For assessing workstation setups.', lastModified: '2025-08-22',
+                            questions: [
+                                { id: 1, question: "Is the top of the monitor at or just below eye level?", type: "Health", aspect: "Poor posture", impact: "Musculoskeletal disorders (MSDs)", controls: "Adjustable monitor stands" }
+                            ]
+                        }
+                    ];
+                    allTemplates = exampleTemplates;
+                    saveTemplatesToStorage();
+                } else {
+                    allTemplates = JSON.parse(storedTemplates);
+                }
+            };
+
+            const showView = (view) => {
+                listingView.style.display = view === 'listing' ? 'block' : 'none';
+                builderView.style.display = view === 'builder' ? 'block' : 'none';
+            };
+            
+            const saveTemplatesToStorage = () => {
+                localStorage.setItem('ehsTemplates', JSON.stringify(allTemplates));
+            };
+
+            const renderTemplateList = () => {
+                templatesTableBody.innerHTML = '';
+                if (allTemplates.length === 0) {
+                    templatesEmptyState.style.display = 'block';
+                    templatesTableBody.parentElement.parentElement.style.display = 'none'; // Hide table container
+                } else {
+                    templatesEmptyState.style.display = 'none';
+                    templatesTableBody.parentElement.parentElement.style.display = 'block';
+                    allTemplates.forEach(template => {
+                        const rowHtml = `
+                        <tr>
+                            <td><strong>${template.name}</strong></td>
+                            <td class="text-muted">${template.description}</td>
+                            <td class="text-center"><span class="badge bg-primary-subtle text-primary-emphasis">${template.questions.length}</span></td>
+                            <td>${template.lastModified}</td>
+                            <td class="text-center">
+                                <button class="btn btn-sm btn-outline-secondary" data-action="edit" data-id="${template.id}" data-bs-toggle="tooltip" title="Edit"><i class="fas fa-pencil-alt"></i></button>
+                                <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${template.id}" data-bs-toggle="tooltip" title="Delete"><i class="fas fa-trash-alt"></i></button>
+                            </td>
+                        </tr>`;
+                        templatesTableBody.insertAdjacentHTML('beforeend', rowHtml);
+                    });
+                }
+                showView('listing');
+            };
+
+            const loadBuilder = (templateId = null) => {
+                if (templateId) {
+                    currentTemplate = JSON.parse(JSON.stringify(allTemplates.find(t => t.id === templateId))); // Deep copy
+                    builderTitle.textContent = "Edit Template";
+                } else {
+                    currentTemplate = { id: null, name: '', description: '', questions: [] };
+                    builderTitle.textContent = "Create New Template";
+                }
+                templateNameInput.value = currentTemplate.name;
+                templateDescInput.value = currentTemplate.description;
+                questionIdCounter = currentTemplate.questions.length > 0 ? Math.max(...currentTemplate.questions.map(q => q.id)) + 1 : 1;
+                renderTemplateQuestions();
+                showView('builder');
+            };
+            
+            showBuilderBtn.addEventListener('click', () => loadBuilder());
+            backToListBtn.addEventListener('click', renderTemplateList);
+
+            templatesTableBody.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (!target) return;
+                const action = target.dataset.action;
+                const id = parseInt(target.dataset.id, 10);
+                if (action === 'edit') {
+                    loadBuilder(id);
+                } else if (action === 'delete') {
+                    if (confirm(`Are you sure you want to delete this template?`)) {
+                        allTemplates = allTemplates.filter(t => t.id !== id);
+                        saveTemplatesToStorage();
+                        renderTemplateList();
+                    }
+                }
+            });
+
+            saveTemplateBtn.addEventListener('click', () => {
+                if (!templateNameInput.value.trim()) {
+                    alert('Template Name is required.');
+                    return;
+                }
+                currentTemplate.name = templateNameInput.value.trim();
+                currentTemplate.description = templateDescInput.value.trim();
+                currentTemplate.lastModified = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                if (currentTemplate.id) { // Editing existing
+                    const index = allTemplates.findIndex(t => t.id === currentTemplate.id);
+                    allTemplates[index] = currentTemplate;
+                } else { // Creating new
+                    currentTemplate.id = Date.now();
+                    allTemplates.push(currentTemplate);
+                }
+                saveTemplatesToStorage();
+                renderTemplateList();
+            });
+
+            const renderTemplateQuestions = () => {
+                if(!currentTemplate.questions || currentTemplate.questions.length === 0) {
+                    builderEmptyState.style.display = 'block';
+                    questionsContainer.innerHTML = '';
+                    questionsContainer.appendChild(builderEmptyState);
+                } else {
+                    builderEmptyState.style.display = 'none';
+                    questionsContainer.innerHTML = currentTemplate.questions.map(q => createQuestionAccordionItem(q)).join('');
+                }
+                updateTemplateSummary();
+            };
+
+            const updateTemplateSummary = () => {
+                totalQuestionsSummary.textContent = currentTemplate.questions.length;
+                if (currentTemplate.questions.length === 0) {
+                    categorySummaryList.innerHTML = `<small class="text-muted">No questions added yet.</small>`;
+                    return;
+                }
+                const usedCategories = [...new Set(currentTemplate.questions.map(item => item.type))];
+                categorySummaryList.innerHTML = usedCategories.map(type => {
+                    const typeInfo = ehsTypes[type];
+                    return `<span class="badge bg-${typeInfo.color}-subtle text-${typeInfo.color}-emphasis border border-${typeInfo.color}-subtle"><i class="fas ${typeInfo.icon} me-1"></i>${type}</span>`;
+                }).join('');
+            };
+
+            const createQuestionAccordionItem = (item) => {
+                const typeInfo = ehsTypes[item.type];
+                const isCollapsed = item.question ? 'collapsed' : '';
+                const isShow = item.question ? '' : 'show';
+
+                return `
+                <div class="accordion-item" data-id="${item.id}">
+                    <h2 class="accordion-header" id="heading-${item.id}">
+                        <button class="accordion-button ${isCollapsed}" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-${item.id}" aria-expanded="${!isCollapsed}" aria-controls="collapse-${item.id}">
+                            <i class="fas ${typeInfo.icon} me-3 text-${typeInfo.color}"></i>
+                            <span class="fw-bold flex-grow-1">${item.question || `New Question #${item.id}`}</span>
+                        </button>
+                    </h2>
+                    <div id="collapse-${item.id}" class="accordion-collapse collapse ${isShow}" aria-labelledby="heading-${item.id}">
+                        <div class="accordion-body bg-light">
+                            <div class="row g-3">
+                                <div class="col-12"><label class="form-label">Question Text</label><input type="text" class="form-control question-text-input" data-field="question" value="${item.question}" placeholder="Type the question or item to assess..."></div>
+                                <div class="col-md-6"><label class="form-label">Category</label><select class="form-select" data-field="type">${Object.keys(ehsTypes).map(t => `<option value="${t}" ${item.type === t ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+                                <div class="col-12"><label class="form-label">Aspect (The Cause)</label><textarea class="form-control" data-field="aspect" rows="2" placeholder="Describe the cause...">${item.aspect || ''}</textarea></div>
+                                <div class="col-12"><label class="form-label">Impact (The Potential Effect)</label><textarea class="form-control" data-field="impact" rows="2" placeholder="Describe the potential effect...">${item.impact || ''}</textarea></div>
+                                <div class="col-12"><label class="form-label">Guidance on Existing Controls</label><textarea class="form-control" data-field="controls" rows="3" placeholder="Provide examples of typical controls...">${item.controls || ''}</textarea></div>
+                                <div class="col-12 text-end"><button class="btn btn-sm btn-outline-danger" data-action="delete-question"><i class="fas fa-trash-alt me-2"></i>Delete Question</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            };
+
+            addQuestionBtn.addEventListener('click', () => {
+                const newItem = { id: questionIdCounter++, question: "", type: "Safety", aspect: "", impact: "", controls: "" };
+                currentTemplate.questions.push(newItem);
+                renderTemplateQuestions();
+            });
+
+            questionsContainer.addEventListener('input', (e) => {
+                if(e.target.classList.contains('question-text-input')) {
+                    const id = parseInt(e.target.closest('.accordion-item').dataset.id, 10);
+                    const headerText = e.target.closest('.accordion-item').querySelector('.accordion-button .fw-bold');
+                    headerText.textContent = e.target.value || `New Question #${id}`;
+                }
+            });
+            
+            questionsContainer.addEventListener('change', (e) => {
+                if (e.target.dataset.field) {
+                    const id = parseInt(e.target.closest('.accordion-item').dataset.id, 10);
+                    const question = currentTemplate.questions.find(q => q.id === id);
+                    if(question) {
+                        question[e.target.dataset.field] = e.target.value;
+                        if (e.target.dataset.field === 'type') {
+                            renderTemplateQuestions();
+                        }
+                        updateTemplateSummary();
+                    }
+                }
+            });
+
+             questionsContainer.addEventListener('click', (e) => {
+                const target = e.target.closest('button');
+                if (target && target.dataset.action === 'delete-question') {
+                    const id = parseInt(target.closest('.accordion-item').dataset.id, 10);
+                    currentTemplate.questions = currentTemplate.questions.filter(q => q.id !== id);
+                    renderTemplateQuestions();
+                }
+            });
+
+            // --- Initial Load ---
+            initTemplates();
+            renderTemplateList();
         });
     </script>
 </body>
