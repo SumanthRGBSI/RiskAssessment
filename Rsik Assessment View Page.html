@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EHS Risk Assessment Prototype</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide-icons@0.368.1/dist/lucide.min.js"></script>
+
+    <style>
+        /* Custom styles to augment Tailwind */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+        }
+
+        .sticky-panel {
+            position: sticky;
+            top: 1.5rem;
+            align-self: start;
+        }
+        
+        details > summary { list-style: none; }
+        details > summary::-webkit-details-marker { display: none; }
+        details[open] summary .arrow { transform: rotate(90deg); }
+        .arrow { transition: transform 0.2s ease-in-out; }
+        .arrow i { transition: transform 0.2s ease-in-out; }
+        details[open] .arrow i { transform: rotate(90deg); }
+
+        .risk-matrix-cell {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .risk-matrix-cell.has-risk {
+            transform: scale(1.1);
+            box-shadow: 0 0 0 3px white, 0 0 0 5px var(--tw-shadow-color);
+        }
+
+        .speedometer-container { position: relative; width: 200px; height: 100px; overflow: hidden; }
+        .speedometer-bg { position: absolute; width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(from -90deg, #22c55e 0deg 45deg, #facc15 45deg 90deg, #f97316 90deg 135deg, #ef4444 135deg 180deg); }
+        .speedometer-mask { position: absolute; top: 10px; left: 10px; width: 180px; height: 180px; border-radius: 50%; background: #ffffff; }
+        .speedometer-needle { position: absolute; bottom: 0; left: 50%; width: 2px; height: 90px; background: #1f2937; transform-origin: bottom center; transition: transform 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55); transform: translateX(-50%) rotate(0deg); border-radius: 2px; }
+        .speedometer-center { position: absolute; bottom: -5px; left: 50%; transform: translateX(-50%); width: 10px; height: 10px; border-radius: 50%; background: #1f2937; }
+        
+        [data-tooltip] { position: relative; cursor: help; }
+        [data-tooltip]::after { content: attr(data-tooltip); position: absolute; bottom: 110%; left: 50%; transform: translateX(-50%); background-color: #1f2937; color: white; padding: 0.5rem 0.75rem; border-radius: 0.375rem; font-size: 0.75rem; line-height: 1rem; white-space: normal; width: max-content; max-width: 300px; opacity: 0; visibility: hidden; transition: opacity 0.2s, visibility 0.2s; z-index: 10; }
+        [data-tooltip]:hover::after { opacity: 1; visibility: visible; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="p-4 md:p-6 lg:p-8">
+
+        <!-- Header -->
+        <header class="mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">EHS Risk Assessment: RA-00125</h1>
+                    <p class="text-slate-500">Workshop Operations EHS Review</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div id="status-banner" class="flex items-center gap-2 text-sm font-semibold py-1 px-3 rounded-full bg-blue-100 text-blue-700"><i class="w-4 h-4" data-lucide="file-pen-line"></i><span>In Progress</span></div>
+                    <button id="submit-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2"><i class="w-5 h-5" data-lucide="check"></i><span>Submit for Approval</span></button>
+                </div>
+            </div>
+            <hr class="mt-4 border-slate-200">
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+            
+            <!-- Left Panel: Analytics -->
+            <aside class="lg:col-span-1">
+                <div class="sticky-panel space-y-6">
+                    <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h2 class="text-lg font-bold text-slate-900 mb-4">At-a-Glance Analytics</h2>
+                        <div class="mb-4">
+                             <h3 class="text-md font-semibold text-slate-700 mb-3">EHS Risk Distribution</h3>
+                             <div id="ehs-type-counts" class="flex justify-around gap-2 text-center"></div>
+                        </div>
+                        <div id="risk-count-pills" class="flex flex-wrap gap-2 mb-6"></div>
+                        <div>
+                            <h3 class="text-md font-semibold text-slate-700 mb-3">Live Risk Matrix</h3>
+                            <div class="flex gap-3">
+                                <div class="flex flex-col justify-between items-center text-xs font-semibold text-slate-500" style="writing-mode: vertical-rl; transform: rotate(180deg);"><span>Severity</span></div>
+                                <div class="flex-1">
+                                    <div id="risk-matrix-grid" class="grid grid-cols-5 gap-1.5"></div>
+                                    <div class="grid grid-cols-5 gap-1.5 text-center text-xs font-semibold text-slate-500 mt-1"><span>VL</span><span>L</span><span>M</span><span>H</span><span>VH</span></div>
+                                    <div class="text-center text-xs font-semibold text-slate-500 mt-2">Likelihood</div>
+                                </div>
+                                <div class="flex flex-col justify-between text-xs font-semibold text-slate-500 py-1"><span>VH</span><span>H</span><span>M</span><span>L</span><span>VL</span></div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-md font-semibold text-slate-700 mb-2">Average Residual Risk</h3>
+                            <div class="flex justify-center items-end gap-2">
+                                <div class="speedometer-container mx-auto"><div class="speedometer-bg"></div><div class="speedometer-mask"></div><div class="speedometer-needle" id="speedometer-needle"></div><div class="speedometer-center"></div></div>
+                            </div>
+                             <div id="avg-risk-label" class="text-center font-bold text-xl text-slate-800 -mt-8">0.0</div>
+                            <p id="avg-risk-level-text" class="text-center text-sm font-semibold text-slate-500">No Risk</p>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="text-md font-semibold text-slate-700 mb-3">Top 5 Residual Risks</h3>
+                            <ul id="top-risks-list" class="space-y-2 text-sm"><li class="text-slate-400">No risks recorded yet.</li></ul>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Panel: Assessment Cards -->
+            <main id="assessment-cards" class="lg:col-span-2 space-y-4"></main>
+        </div>
+    </div>
+    
+    <!-- Modals -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md text-center">
+            <h2 class="text-xl font-bold text-slate-900 mb-2">Confirm Submission</h2>
+            <p class="text-slate-600 mb-6">This will lock the assessment and notify the approver. Are you sure you want to proceed?</p>
+            <div class="flex justify-center gap-4"><button id="cancel-submission" class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors">Cancel</button><button id="confirm-submission" class="bg-indigo-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-indigo-700 transition-colors">Yes, Submit</button></div>
+        </div>
+    </div>
+    <div id="rejection-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 hidden">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg">
+            <h2 class="text-xl font-bold text-slate-900 mb-4">Reject Action Plan</h2>
+            <p class="text-slate-600 mb-4">Please provide a reason for rejecting the submitted evidence. This will be sent back to the assignee.</p>
+            <textarea id="rejection-comment" class="w-full p-2 border-slate-300 rounded-md shadow-sm focus:ring-red-500 focus:border-red-500" rows="4" placeholder="e.g., The uploaded photo does not clearly show the new guard in place. Please provide a better image."></textarea>
+            <div class="flex justify-end gap-4 mt-4">
+                <button id="cancel-rejection" class="bg-slate-200 text-slate-800 font-semibold py-2 px-6 rounded-lg hover:bg-slate-300 transition-colors">Cancel</button>
+                <button id="confirm-rejection" class="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-700 transition-colors">Submit Rejection</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DATA AND CONFIGURATION ---
+
+        const ehsTypes = {
+            Safety: { icon: 'shield', color: 'blue', label: 'Safety Hazard' },
+            Health: { icon: 'heart-pulse', color: 'purple', label: 'Health Hazard' },
+            Environmental: { icon: 'leaf', color: 'green', label: 'Environmental Aspect' }
+        };
+
+        const actionPlanStatuses = {
+            required: { text: 'Required', icon: 'file-plus-2', color: 'gray', next: 'assigned' },
+            assigned: { text: 'Assigned', icon: 'user-check', color: 'amber', next: 'evidence-submitted' },
+            evidenceSubmitted: { text: 'Evidence Submitted', icon: 'file-check-2', color: 'blue', next: ['verified', 'rejected'] },
+            rejected: { text: 'Rejected', icon: 'file-x-2', color: 'red', next: 'assigned' },
+            verified: { text: 'Verified & Closed', icon: 'check-check', color: 'green', next: null }
+        };
+
+        const riskConfig = {
+            severity: [{ score: 1, name: "Very Low", desc: "S: First aid injury. H: Minor reversible health effect. E: Minor, localized, short-term impact." },{ score: 2, name: "Low", desc: "S: Medical treatment case. H: Reversible health effect. E: Localized, short-term impact." },{ score: 3, name: "Medium", desc: "S: Lost time injury. H: Irreversible health effect. E: Contained on-site release." },{ score: 4, name: "High", desc: "S: Single fatality or major injury. H: Severe irreversible health effect. E: Off-site release with impact." },{ score: 5, name: "Very High", desc: "S: Multiple fatalities. H: Widespread irreversible health effects. E: Major off-site release with severe impact." },],
+            likelihood: [{ score: 1, name: "Very Low", desc: "Has occurred in industry but never at this company." },{ score: 2, name: "Low", desc: "Has occurred at this company but not at this location/process." },{ score: 3, name: "Medium", desc: "Has occurred at this location/process before." },{ score: 4, name: "High", desc: "Occurs several times a year at this location/process." },{ score: 5, name: "Very High", desc: "Occurs frequently (daily/weekly) at this location/process." },],
+            matrixLevels: [{ name: "Low", range: [1, 4], color: "bg-green-500", textColor: "text-white" },{ name: "Medium", range: [5, 10], color: "bg-yellow-400", textColor: "text-slate-800" },{ name: "High", range: [11, 16], color: "bg-orange-500", textColor: "text-white" },{ name: "Critical", range: [17, 25], color: "bg-red-500", textColor: "text-white" },]
+        };
+
+        const assessmentData = [
+            { id: 1, type: "Safety", item: "Unguarded rotating parts on lathe", detail: "Entanglement or drawing-in hazard from chuck or leadscrew.", controls: "Partial guarding in place, basic operator training.", inherent: { s: 4, l: 4}, residual: { s: 2, l: 2 }, actionPlan: { required: 'yes', measure: "Install full interlocking guard.", assignee: "John Doe", due: "2025-07-15", status: 'assigned', evidence: { text: '', files: [] }, history: [{ user: 'Assessor', timestamp: '2025-06-10T10:00:00Z', event: 'Action plan created and assigned.' }] } },
+            { id: 2, type: "Safety", item: "Manual handling of heavy stock material", detail: "Musculoskeletal injuries (strains, sprains) from lifting awkward, heavy items.", controls: "Manual handling training provided annually.", inherent: { s: 3, l: 5}, residual: { s: 3, l: 2 }, actionPlan: { required: 'not-assessed' } },
+            { id: 3, type: "Health", item: "Exposure to cutting fluids", detail: "Skin irritation, dermatitis, or respiratory issues from prolonged contact or mist.", controls: "Gloves and safety glasses provided. Local exhaust ventilation in place.", inherent: { s: 2, l: 3}, residual: { s: 2, l: 1 }, actionPlan: { required: 'no' } },
+            { id: 4, type: "Health", item: "Use of Vibrating Tools", detail: "Risk of Hand-Arm Vibration Syndrome (HAVS).", controls: "Standard non-anti-vibration tools used.", inherent: { s: 3, l: 4}, residual: { s: 3, l: 3 }, actionPlan: { required: 'yes', measure: "Implement a tool replacement program for low-vibration models.", assignee: "Workshop Supervisor", due: "2025-09-01", status: 'evidenceSubmitted', evidence: { text: 'New tools purchased and in use. See attached invoice.', files: ['invoice.pdf'] }, history: [{ user: 'Assessor', timestamp: '2025-06-11T11:00:00Z', event: 'Action plan created.'}, { user: 'W. Supervisor', timestamp: '2025-08-20T14:30:00Z', event: 'Submitted evidence for review.' }] } },
+            { id: 5, type: "Environmental", item: "Chemical & Oil Storage", detail: "Potential for land and water contamination from spills or leaks.", controls: "Stored in original containers on concrete floor.", inherent: { s: 4, l: 2}, residual: { s: 2, l: 2 }, actionPlan: { required: 'yes', measure: "Procure and install certified bunded storage.", assignee: "EHS Manager", due: "2025-07-30", status: 'verified', evidence: { text: 'Bunded storage installed, photo attached.', files: ['bund_photo.jpg'] }, history: [{ user: 'Assessor', timestamp: '2025-06-12T09:00:00Z', event: 'Action plan created.'}, { user: 'EHS Manager', timestamp: '2025-07-25T16:00:00Z', event: 'Submitted evidence.'}, { user: 'Reviewer', timestamp: '2025-07-26T10:00:00Z', event: 'Evidence verified and action closed.' }] } },
+            { id: 6, type: "Safety", item: "Electrical hazards from portable tools", detail: "Electric shock or burns from frayed cables or faulty equipment.", controls: "Annual PAT testing.", inherent: { s: 5, l: 2}, residual: { s: 3, l: 1 }, actionPlan: { required: 'not-assessed' } },
+        ];
+        
+        const riskState = {};
+
+        // --- UTILITY FUNCTIONS ---
+        const getRiskLevel = (score) => {
+            if (!score || score === 0) return { name: "None", color: "bg-slate-200", textColor: "text-slate-700" };
+            for (const level of riskConfig.matrixLevels) {
+                if (score >= level.range[0] && score <= level.range[1]) return level;
+            }
+            return riskConfig.matrixLevels[riskConfig.matrixLevels.length - 1];
+        };
+        const createSelectOptions = (options) => options.map(opt => `<option value="${opt.score}">${opt.score} - ${opt.name}</option>`).join('');
+        const formatDate = (dateStr) => new Date(dateStr).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
+
+        // --- CORE RENDERING LOGIC ---
+        const renderAssessmentCards = () => {
+            const container = document.getElementById('assessment-cards');
+            container.innerHTML = assessmentData.map(item => renderCardHTML(item)).join('');
+            document.querySelectorAll('.assessment-card').forEach(card => {
+                const id = card.dataset.id;
+                const data = assessmentData.find(item => item.id == id);
+                card.querySelector('select[data-type="inherent"][data-metric="s"]').value = data.inherent.s;
+                card.querySelector('select[data-type="inherent"][data-metric="l"]').value = data.inherent.l;
+                card.querySelector('select[data-type="residual"][data-metric="s"]').value = data.residual.s;
+                card.querySelector('select[data-type="residual"][data-metric="l"]').value = data.residual.l;
+            });
+        };
+
+        const renderSingleCard = (id) => {
+            const cardElement = document.querySelector(`.assessment-card[data-id='${id}']`);
+            const data = assessmentData.find(item => item.id == id);
+            if (cardElement && data) {
+                const tempContainer = document.createElement('div');
+                tempContainer.innerHTML = renderCardHTML(data);
+                const newCardElement = tempContainer.firstElementChild;
+                cardElement.replaceWith(newCardElement);
+                
+                newCardElement.querySelector('select[data-type="inherent"][data-metric="s"]').value = data.inherent.s;
+                newCardElement.querySelector('select[data-type="inherent"][data-metric="l"]').value = data.inherent.l;
+                newCardElement.querySelector('select[data-type="residual"][data-metric="s"]').value = data.residual.s;
+                newCardElement.querySelector('select[data-type="residual"][data-metric="l"]').value = data.residual.l;
+                lucide.createIcons();
+            }
+        };
+
+        const renderCardHTML = (item) => {
+            const inherentScore = item.inherent.s * item.inherent.l;
+            const residualScore = item.residual.s * item.residual.l;
+            riskState[item.id] = { inherent: inherentScore, residual: residualScore };
+            const inherentRisk = getRiskLevel(inherentScore);
+            const residualRisk = getRiskLevel(residualScore);
+            const typeInfo = ehsTypes[item.type];
+
+            // Detail Section (Aspect/Impact vs Hazard)
+            let detailSectionHtml = '';
+            if (item.type === 'Environmental') {
+                detailSectionHtml = `<div class="md:col-span-2 space-y-4"><div class="p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg space-y-2"><div><label class="block text-sm font-semibold text-green-900 mb-1">Environmental Aspect (The Cause)</label><p class="text-sm text-slate-800 p-2 bg-white rounded-md border border-slate-200">${item.item}</p></div><div class="flex justify-center py-1 text-green-500"><i class="w-5 h-5" data-lucide="arrow-down"></i></div><div><label class="block text-sm font-semibold text-green-900 mb-1">Potential Environmental Impact(s) (The Effect)</label><p class="text-sm text-slate-800 p-2 bg-white rounded-md border border-slate-200">${item.detail}</p></div></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Existing Controls to Manage Aspect</label><p class="text-sm text-slate-600 p-2 bg-white rounded-md border">${item.controls}</p></div></div>`;
+            } else {
+                const detailLabel = `How is it a ${item.type} Hazard?`;
+                detailSectionHtml = `<div class="md:col-span-2 space-y-4"><div><label class="block text-sm font-medium text-slate-700 mb-1">${detailLabel}</label><p class="text-sm text-slate-600 p-2 bg-white rounded-md border">${item.detail}</p></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Existing Controls</label><p class="text-sm text-slate-600 p-2 bg-white rounded-md border">${item.controls}</p></div></div>`;
+            }
+
+            // Action Plan Section
+            const highRiskThreshold = riskConfig.matrixLevels.find(l => l.name === 'High').range[0];
+            let actionPlanHtml = '';
+            if (inherentScore >= highRiskThreshold) {
+                actionPlanHtml = renderActionPlanHTML(item);
+            }
+
+            return `
+            <details class="assessment-card bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" data-id="${item.id}" open>
+                <summary class="p-4 cursor-pointer flex justify-between items-center bg-white hover:bg-slate-50 transition-colors">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3">
+                            <span class="flex-shrink-0 w-8 h-8 rounded-full bg-${typeInfo.color}-100 text-${typeInfo.color}-600 flex items-center justify-center"><i class="w-5 h-5" data-lucide="${typeInfo.icon}"></i></span>
+                            <div><h3 class="font-semibold text-slate-800">${item.item}</h3><span class="text-xs font-semibold text-${typeInfo.color}-700">${typeInfo.label}</span></div>
+                        </div>
+                        <div class="flex items-center gap-4 text-sm text-slate-500 mt-2 pl-11">
+                            <span>Inherent: <span class="font-bold p-1 rounded ${inherentRisk.color} ${inherentRisk.textColor}">${inherentScore} (${inherentRisk.name})</span></span>
+                            <i class="w-5 h-5 text-slate-400" data-lucide="arrow-right"></i>
+                            <span>Residual: <span class="font-bold p-1 rounded ${residualRisk.color} ${residualRisk.textColor}">${residualScore} (${residualRisk.name})</span></span>
+                        </div>
+                    </div>
+                    <div class="arrow text-slate-400 ml-4"><i class="w-6 h-6" data-lucide="chevron-right"></i></div>
+                </summary>
+                <div class="p-6 border-t border-slate-200 bg-slate-50/50">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+                        ${detailSectionHtml}
+                        <div class="p-4 bg-white rounded-lg border space-y-3"><h4 class="font-semibold text-slate-800">Inherent Risk</h4><div class="grid grid-cols-3 gap-3 items-center"><label class="text-sm font-medium text-slate-600" data-tooltip="${riskConfig.severity.map(s => `[${s.score}] ${s.desc}`).join('\n')}">Severity ⓘ</label><select data-type="inherent" data-metric="s" class="col-span-2 w-full p-2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">${createSelectOptions(riskConfig.severity)}</select><label class="text-sm font-medium text-slate-600" data-tooltip="${riskConfig.likelihood.map(l => `[${l.score}] ${l.desc}`).join('\n')}">Likelihood ⓘ</label><select data-type="inherent" data-metric="l" class="col-span-2 w-full p-2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">${createSelectOptions(riskConfig.likelihood)}</select><label class="text-sm font-medium text-slate-600">Risk Score</label><div class="inherent-score-cell col-span-2 text-center font-bold p-2 rounded-md ${inherentRisk.color} ${inherentRisk.textColor}">${inherentScore}</div></div></div>
+                        <div class="p-4 bg-white rounded-lg border space-y-3"><h4 class="font-semibold text-slate-800">Residual Risk</h4><div class="grid grid-cols-3 gap-3 items-center"><label class="text-sm font-medium text-slate-600" data-tooltip="${riskConfig.severity.map(s => `[${s.score}] ${s.desc}`).join('\n')}">Severity ⓘ</label><select data-type="residual" data-metric="s" class="col-span-2 w-full p-2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">${createSelectOptions(riskConfig.severity)}</select><label class="text-sm font-medium text-slate-600" data-tooltip="${riskConfig.likelihood.map(l => `[${l.score}] ${l.desc}`).join('\n')}">Likelihood ⓘ</label><select data-type="residual" data-metric="l" class="col-span-2 w-full p-2 border-slate-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 text-sm">${createSelectOptions(riskConfig.likelihood)}</select><label class="text-sm font-medium text-slate-600">Risk Score</label><div class="residual-score-cell col-span-2 text-center font-bold p-2 rounded-md ${residualRisk.color} ${residualRisk.textColor}">${residualScore}</div></div></div>
+                        ${actionPlanHtml}
+                    </div>
+                </div>
+            </details>`;
+        };
+
+        const renderActionPlanHTML = (item) => {
+            const ap = item.actionPlan;
+            if (ap.required === 'not-assessed') {
+                return `<div class="md:col-span-2 mt-2 p-4 bg-slate-100 border-l-4 border-slate-400 rounded-r-lg"><h4 class="font-semibold text-slate-800">Are new control measures required?</h4><p class="text-sm text-slate-600 mb-4">Based on the inherent risk, an action plan may be necessary.</p><div class="flex gap-4"><button data-action="require-ap-yes" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-700">Yes</button><button data-action="require-ap-no" class="bg-slate-300 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-400">No</button></div></div>`;
+            }
+            if (ap.required === 'no') {
+                return `<div class="md:col-span-2 mt-2 p-4 bg-green-50 border-l-4 border-green-500 rounded-r-lg"><h4 class="font-semibold text-green-800 flex items-center gap-2"><i data-lucide="check-circle"></i>No new control measures required.</h4><p class="text-sm text-green-700">The assessor has determined that existing controls are sufficient.</p></div>`;
+            }
+            
+            // --- Full Action Plan Workflow UI ---
+            const statusInfo = actionPlanStatuses[ap.status];
+            const isVerified = ap.status === 'verified';
+            let statusPill = `<div class="mt-1 text-sm font-semibold text-${statusInfo.color}-800 bg-${statusInfo.color}-100 py-1 px-2 rounded-full inline-flex items-center gap-2"><i class="w-4 h-4" data-lucide="${statusInfo.icon}"></i>Status: ${statusInfo.text}</div>`;
+            
+            // Main content based on status
+            let contentHtml = '';
+            if (ap.status === 'required') {
+                contentHtml = `<div><label class="block text-sm font-medium text-slate-700 mb-1">New Control Measure <span class="text-slate-400" data-tooltip="Define a new control based on the Hierarchy of Controls (Elimination > Substitution > Engineering > Admin > PPE).">ⓘ</span></label><textarea data-field="measure" rows="2" class="w-full p-2 border-slate-300 rounded-md shadow-sm">${ap.measure || ''}</textarea></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-4"><div><label class="block text-sm font-medium text-slate-700 mb-1">Assigned To</label><input data-field="assignee" type="text" value="${ap.assignee || ''}" class="w-full p-2 border-slate-300 rounded-md shadow-sm"></div><div><label class="block text-sm font-medium text-slate-700 mb-1">Due Date</label><input data-field="due" type="date" value="${ap.due || ''}" class="w-full p-2 border-slate-300 rounded-md shadow-sm"></div></div>`;
+            } else if (ap.status === 'assigned' || ap.status === 'rejected') {
+                if (ap.status === 'rejected') { statusPill += `<div class="mt-2 p-3 bg-red-100 text-red-800 rounded-lg text-sm"><strong>Reviewer Feedback:</strong> ${ap.history[ap.history.length-1].event}</div>`; }
+                contentHtml = `<div class="p-4 bg-white rounded-lg border border-slate-200 space-y-3"><p class="text-sm"><strong class="font-medium text-slate-700">Control:</strong> ${ap.measure}</p><p class="text-sm"><strong class="font-medium text-slate-700">Assigned To:</strong> ${ap.assignee}</p><p class="text-sm"><strong class="font-medium text-slate-700">Due Date:</strong> ${ap.due}</p></div><div class="mt-4"><h5 class="font-semibold text-slate-800 mb-2">Submit Completion Evidence</h5><div><label class="block text-sm font-medium text-slate-700 mb-1">Comments</label><textarea data-field="evidence-text" placeholder="e.g., New guard installed and tested." rows="3" class="w-full p-2 border-slate-300 rounded-md shadow-sm"></textarea></div><div class="mt-2"><label class="block text-sm font-medium text-slate-700 mb-1">Attach Files (Simulated)</label><div class="flex items-center gap-2 text-sm p-2 bg-white rounded-md border"><i class="w-4 h-4 text-slate-500" data-lucide="paperclip"></i><span class="text-slate-500">invoice.pdf, photo.jpg</span><button class="ml-auto text-indigo-600 hover:text-indigo-800 font-semibold">Upload</button></div></div></div>`;
+            } else if (ap.status === 'evidenceSubmitted' || isVerified) {
+                contentHtml = `<div class="p-4 bg-white rounded-lg border border-slate-200 space-y-3"><p class="text-sm"><strong class="font-medium text-slate-700">Control:</strong> ${ap.measure}</p><p class="text-sm"><strong class="font-medium text-slate-700">Assigned To:</strong> ${ap.assignee}</p><p class="text-sm"><strong class="font-medium text-slate-700">Due Date:</strong> ${ap.due}</p></div><div class="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200"><h5 class="font-semibold text-blue-800 mb-2">Submitted Evidence</h5><p class="text-sm text-slate-700 mb-2">${ap.evidence.text}</p><div class="flex items-center gap-2 text-sm"><i class="w-4 h-4 text-slate-500" data-lucide="paperclip"></i><span class="text-blue-600 font-medium">${ap.evidence.files.join(', ')}</span></div></div>`;
+            }
+
+            // Buttons based on status
+            let buttonsHtml = '';
+            if (ap.status === 'required') { buttonsHtml = `<button data-action="assign-task" class="bg-amber-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-amber-600 text-sm flex items-center gap-2"><i class="w-4 h-4" data-lucide="send"></i>Assign Task</button>`; }
+            else if (ap.status === 'assigned' || ap.status === 'rejected') { buttonsHtml = `<button data-action="submit-evidence" class="bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-blue-700 text-sm flex items-center gap-2"><i class="w-4 h-4" data-lucide="file-check-2"></i>Submit for Review</button>`; }
+            else if (ap.status === 'evidenceSubmitted') { buttonsHtml = `<div class="flex gap-4"><button data-action="reject-evidence" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-red-700 text-sm flex items-center gap-2"><i class="w-4 h-4" data-lucide="x-circle"></i>Reject</button><button data-action="verify-evidence" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 text-sm flex items-center gap-2"><i class="w-4 h-4" data-lucide="check-check"></i>Approve & Verify</button></div>`; }
+            
+            // History Section
+            const historyHtml = `<details class="mt-4"><summary class="cursor-pointer text-sm font-semibold text-slate-600 flex items-center gap-1">Action History <i class="arrow w-4 h-4" data-lucide="chevron-right"></i></summary><ul class="mt-2 space-y-2 text-xs text-slate-500 border-t pt-2">${ap.history.map(h => `<li class="flex gap-2"><i class="w-3 h-3 mt-0.5" data-lucide="history"></i><div><strong>${h.user}</strong> (${formatDate(h.timestamp)}): ${h.event}</div></li>`).join('')}</ul></details>`;
+
+            return `<div class="action-plan md:col-span-2 mt-2 p-4 bg-${statusInfo.color}-50 border-l-4 border-${statusInfo.color}-400 rounded-r-lg">
+                        <div class="flex justify-between items-start">
+                            <div><h4 class="font-semibold text-slate-900 flex items-center gap-2"><i class="w-5 h-5 text-slate-500" data-lucide="alert-triangle"></i><span>Action Plan</span></h4>${statusPill}</div>
+                            <div class="action-buttons">${buttonsHtml}</div>
+                        </div>
+                        <div class="mt-4 space-y-4">${contentHtml}</div>
+                        ${historyHtml}
+                    </div>`;
+        };
+
+        // --- ANALYTICS & UI UPDATES ---
+        const updateAnalytics = () => {
+            const ehsCountsContainer = document.getElementById('ehs-type-counts');
+            const typeCounts = { Safety: 0, Health: 0, Environmental: 0 };
+            assessmentData.forEach(item => { typeCounts[item.type]++; });
+            ehsCountsContainer.innerHTML = Object.entries(typeCounts).map(([type, count]) => `<div class="text-center"><div><i class="w-6 h-6 text-${ehsTypes[type].color}-500 inline-block" data-lucide="${ehsTypes[type].icon}"></i><span class="text-2xl font-bold text-slate-800 ml-2">${count}</span></div><p class="text-xs font-semibold text-slate-500">${type}</p></div>`).join('');
+
+            const matrixGrid = document.getElementById('risk-matrix-grid');
+            matrixGrid.innerHTML = '';
+            const severityScores = riskConfig.severity.map(s => s.score).sort((a,b) => b-a);
+            const likelihoodScores = riskConfig.likelihood.map(l => l.score).sort((a,b) => a-b);
+            const residualPoints = {};
+            Object.keys(riskState).forEach(id => {
+                const data = assessmentData.find(d => d.id == id);
+                if (riskState[id].residual > 0 && data) {
+                    const key = `${data.residual.s}-${data.residual.l}`;
+                    if (!residualPoints[key]) residualPoints[key] = { count: 0, level: getRiskLevel(riskState[id].residual) };
+                    residualPoints[key].count++;
+                }
+            });
+            severityScores.forEach(s => { likelihoodScores.forEach(l => {
+                const score = s * l;
+                const level = getRiskLevel(score);
+                const pointKey = `${s}-${l}`;
+                const hasRisk = residualPoints[pointKey];
+                const cell = document.createElement('div');
+                cell.className = `risk-matrix-cell ${level.color} ${level.textColor} ${hasRisk ? 'has-risk' : ''}`;
+                if(hasRisk) cell.style.setProperty('--tw-shadow-color', level.color.replace('bg-',''));
+                cell.textContent = hasRisk ? residualPoints[pointKey].count : '';
+                matrixGrid.appendChild(cell);
+            })});
+
+            const pillsContainer = document.getElementById('risk-count-pills');
+            const counts = {};
+            riskConfig.matrixLevels.forEach(l => counts[l.name] = { count: 0, ...l});
+            Object.values(riskState).forEach(state => {
+                 const level = getRiskLevel(state.residual);
+                 if(level.name !== "None") counts[level.name].count++;
+            });
+            pillsContainer.innerHTML = Object.values(counts).reverse().map(level => level.count === 0 ? '' : `<span class="font-semibold text-sm py-1 px-3 rounded-full ${level.color} ${level.textColor}">${level.name} (${level.count})</span>`).join('');
+
+            const topRisksList = document.getElementById('top-risks-list');
+            const sortedRisks = Object.entries(riskState).map(([id, scores]) => ({ id, score: scores.residual, item: assessmentData.find(d=>d.id==id).item, type: assessmentData.find(d=>d.id==id).type })).sort((a, b) => b.score - a.score);
+            topRisksList.innerHTML = sortedRisks.slice(0, 5).map(risk => {
+                if (risk.score === 0) return '';
+                const level = getRiskLevel(risk.score);
+                const typeInfo = ehsTypes[risk.type];
+                return `<li class="flex items-center gap-2"><i class="w-4 h-4 text-${typeInfo.color}-500" data-lucide="${typeInfo.icon}"></i><span class="flex-1 truncate" title="${risk.item}">${risk.item}</span><span class="font-bold p-1 text-xs rounded ${level.color} ${level.textColor}">${risk.score}</span></li>`;
+            }).join('') || `<li class="text-slate-400">No risks recorded yet.</li>`;
+
+            const totalScore = Object.values(riskState).reduce((acc, curr) => acc + curr.residual, 0);
+            const numItems = Object.keys(riskState).length;
+            const avgScore = numItems > 0 ? totalScore / numItems : 0;
+            document.getElementById('speedometer-needle').style.transform = `translateX(-50%) rotate(${(avgScore / 25) * 180 - 90}deg)`;
+            document.getElementById('avg-risk-label').textContent = avgScore.toFixed(1);
+            document.getElementById('avg-risk-level-text').textContent = getRiskLevel(Math.round(avgScore)).name;
+        };
+        
+        // --- EVENT HANDLERS & INITIALIZATION ---
+        window.onload = () => {
+            const cardsContainer = document.getElementById('assessment-cards');
+            
+            function handleFormChange(e) {
+                if (e.target.tagName !== 'SELECT') return;
+                const card = e.target.closest('.assessment-card');
+                const id = card.dataset.id;
+                const type = e.target.dataset.type;
+                const dataItem = assessmentData.find(item => item.id == id);
+                dataItem[type].s = card.querySelector(`select[data-type="${type}"][data-metric="s"]`).value;
+                dataItem[type].l = card.querySelector(`select[data-type="${type}"][data-metric="l"]`).value;
+                const newScore = dataItem[type].s * dataItem[type].l;
+                riskState[id][type] = newScore;
+                if (type === 'inherent') renderSingleCard(id);
+                updateAnalytics();
+            }
+
+            function handleCardClick(e) {
+                const button = e.target.closest('button[data-action]');
+                if (!button) return;
+
+                const card = e.target.closest('.assessment-card');
+                const id = card.dataset.id;
+                const dataItem = assessmentData.find(item => item.id == id);
+                const action = button.dataset.action;
+                const ap = dataItem.actionPlan;
+
+                switch(action) {
+                    case 'require-ap-yes':
+                        ap.required = 'yes';
+                        ap.status = 'required';
+                        if (!ap.history) ap.history = [];
+                        ap.history.push({ user: 'Assessor', timestamp: new Date().toISOString(), event: 'Determined a new control measure is required.' });
+                        break;
+                    case 'require-ap-no':
+                        ap.required = 'no';
+                        break;
+                    case 'assign-task':
+                        ap.measure = card.querySelector('[data-field="measure"]').value;
+                        ap.assignee = card.querySelector('[data-field="assignee"]').value;
+                        ap.due = card.querySelector('[data-field="due"]').value;
+                        ap.status = 'assigned';
+                        ap.history.push({ user: 'Assessor', timestamp: new Date().toISOString(), event: `Task assigned to ${ap.assignee}.` });
+                        break;
+                    case 'submit-evidence':
+                        ap.evidence.text = card.querySelector('[data-field="evidence-text"]').value;
+                        // In a real app, you'd handle file uploads here. We'll simulate it.
+                        ap.evidence.files = ['invoice.pdf', 'photo.jpg'];
+                        ap.status = 'evidenceSubmitted';
+                        ap.history.push({ user: ap.assignee, timestamp: new Date().toISOString(), event: 'Submitted evidence for review.' });
+                        break;
+                    case 'verify-evidence':
+                        ap.status = 'verified';
+                        ap.history.push({ user: 'Reviewer', timestamp: new Date().toISOString(), event: 'Evidence approved and action verified.' });
+                        break;
+                    case 'reject-evidence':
+                        const modal = document.getElementById('rejection-modal');
+                        modal.dataset.assessmentId = id;
+                        modal.classList.remove('hidden');
+                        return; // Don't re-render yet
+                }
+                renderSingleCard(id);
+                updateAnalytics();
+            }
+
+            // Modal Handlers
+            const rejectionModal = document.getElementById('rejection-modal');
+            document.getElementById('cancel-rejection').addEventListener('click', () => rejectionModal.classList.add('hidden'));
+            document.getElementById('confirm-rejection').addEventListener('click', () => {
+                const id = rejectionModal.dataset.assessmentId;
+                const comment = document.getElementById('rejection-comment').value;
+                if (id && comment) {
+                    const dataItem = assessmentData.find(item => item.id == id);
+                    dataItem.actionPlan.status = 'assigned'; // Send it back to assignee
+                    dataItem.actionPlan.history.push({ user: 'Reviewer', timestamp: new Date().toISOString(), event: `Evidence rejected: ${comment}` });
+                    rejectionModal.classList.add('hidden');
+                    document.getElementById('rejection-comment').value = '';
+                    renderSingleCard(id);
+                    updateAnalytics();
+                }
+            });
+            
+            const confirmationModal = document.getElementById('confirmation-modal');
+            document.getElementById('submit-button').addEventListener('click', () => confirmationModal.classList.remove('hidden'));
+            document.getElementById('cancel-submission').addEventListener('click', () => confirmationModal.classList.add('hidden'));
+            document.getElementById('confirm-submission').addEventListener('click', () => {
+                confirmationModal.classList.add('hidden');
+                document.getElementById('submit-button').disabled = true;
+                document.getElementById('status-banner').innerHTML = `<i class="w-4 h-4" data-lucide="clock"></i><span>In Review</span>`;
+                document.querySelectorAll('select, input, textarea, button').forEach(el => el.disabled = true);
+                lucide.createIcons();
+            });
+
+            // Initial Setup
+            renderAssessmentCards();
+            updateAnalytics();
+            cardsContainer.addEventListener('change', handleFormChange);
+            cardsContainer.addEventListener('click', handleCardClick);
+            lucide.createIcons();
+        };
+    </script>
+</body>
+</html>
