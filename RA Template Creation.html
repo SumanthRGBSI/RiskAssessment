@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Assessment Templates</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide-icons@0.378.0/dist/lucide.min.js"></script>
+
+    <style>
+        /* Custom styles for a polished UI/UX */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        .sticky-panel {
+            position: sticky;
+            top: 1.5rem;
+            align-self: start;
+        }
+        
+        /* Style for the collapsible question cards */
+        details > summary { 
+            list-style: none; 
+            cursor: pointer;
+        }
+        details > summary::-webkit-details-marker { 
+            display: none; 
+        }
+        details[open] summary .arrow { 
+            transform: rotate(90deg); 
+        }
+        .arrow { 
+            transition: transform 0.2s ease-in-out; 
+        }
+
+        /* Enhanced focus rings for better accessibility */
+        input:focus, select:focus, textarea:focus, button:focus-visible {
+            outline: 2px solid transparent;
+            outline-offset: 2px;
+            --tw-ring-color: rgb(79 70 229 / 0.5);
+            box-shadow: 0 0 0 2px var(--tw-ring-color);
+            border-color: rgb(99 102 241);
+        }
+
+        /* Page transition animation */
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .page-fade-in {
+            animation: fade-in 0.3s ease-out forwards;
+        }
+        
+        /* Animation for newly added cards */
+        @keyframes slide-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .new-card-animation {
+            animation: slide-in 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <div id="app" class="p-4 md:p-6 lg:p-8 max-w-screen-2xl mx-auto">
+
+        <!-- Page 1: Template Listing -->
+        <div id="listing-page">
+            <!-- Header -->
+            <header class="mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900">Risk Assessment Templates</h1>
+                        <p class="text-slate-500 mt-1">Manage, create, or edit your assessment templates.</p>
+                    </div>
+                    <button id="create-new-template-btn" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 w-full md:w-auto justify-center">
+                        <i class="w-5 h-5" data-lucide="plus"></i>
+                        <span>Create New Template</span>
+                    </button>
+                </div>
+                <hr class="mt-6 border-slate-200">
+            </header>
+
+            <!-- Templates Grid -->
+            <div id="templates-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Template cards will be dynamically inserted here -->
+            </div>
+
+            <!-- Empty State for Listing Page -->
+            <div id="listing-empty-state" class="text-center py-16 px-6 bg-white rounded-xl shadow-sm border border-slate-200 border-dashed hidden">
+                <i class="w-16 h-16 text-slate-400 mx-auto" data-lucide="file-plus-2"></i>
+                <h3 class="mt-4 text-xl font-semibold text-slate-800">No templates found</h3>
+                <p class="mt-2 text-slate-500">Get started by creating your first risk assessment template.</p>
+                <button id="create-first-template-btn" class="mt-6 bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2 mx-auto">
+                    <i class="w-5 h-5" data-lucide="plus"></i>
+                    <span>Create New Template</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 2: Template Builder -->
+        <div id="builder-page" class="hidden">
+            <!-- Header -->
+            <header class="mb-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h1 id="builder-title" class="text-2xl font-bold text-slate-900">Create New Template</h1>
+                        <p class="text-slate-500">Add questions and define their properties to build your template.</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button id="back-to-list-btn" class="bg-white text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-300 hover:bg-slate-50 transition-colors flex items-center gap-2">
+                            <i class="w-5 h-5" data-lucide="arrow-left"></i>
+                            <span>Back</span>
+                        </button>
+                        <button id="save-template-button" class="bg-indigo-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-indigo-700 transition-colors flex items-center gap-2">
+                            <i class="w-5 h-5" data-lucide="save"></i>
+                            <span>Save Template</span>
+                        </button>
+                    </div>
+                </div>
+                <hr class="mt-4 border-slate-200">
+            </header>
+
+            <!-- Main Content Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+                <!-- Left Panel: Form -->
+                <main class="lg:col-span-2 space-y-6">
+                    <!-- Template Details Card -->
+                    <section class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h2 class="text-lg font-bold text-slate-900 mb-4">Template Details</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                            <div>
+                                <label for="template-name" class="block text-sm font-medium text-slate-700 mb-1">Template Name</label>
+                                <input type="text" id="template-name" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm" placeholder="e.g., General Workshop Safety">
+                                <p id="template-name-error" class="text-red-500 text-xs mt-1 hidden">Template name is required.</p>
+                            </div>
+                            <div>
+                                <label for="template-description" class="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                                <input type="text" id="template-description" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm" placeholder="A brief description of this template's purpose">
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Dynamic Question Section -->
+                    <section>
+                        <div class="flex justify-between items-center mb-4">
+                             <h2 class="text-lg font-bold text-slate-900">Template Questions</h2>
+                             <button id="add-question-button" class="bg-green-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-green-700 transition-colors flex items-center gap-2">
+                                 <i class="w-5 h-5" data-lucide="plus-circle"></i>
+                                 <span>Add Question</span>
+                             </button>
+                        </div>
+                        <div id="questions-container" class="space-y-4">
+                            <!-- Question cards will be dynamically inserted here -->
+                            <div id="builder-empty-state" class="text-center py-12 px-6 bg-white rounded-xl shadow-sm border border-slate-200 border-dashed">
+                                <i class="w-12 h-12 text-slate-400 mx-auto" data-lucide="clipboard-list"></i>
+                                <h3 class="mt-4 text-lg font-semibold text-slate-800">No questions added yet</h3>
+                                <p class="mt-1 text-slate-500">Click "Add Question" to build your template.</p>
+                            </div>
+                        </div>
+                    </section>
+                </main>
+
+                <!-- Right Panel: Summary -->
+                <aside class="lg:col-span-1">
+                    <div class="sticky-panel space-y-6">
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h2 class="text-lg font-bold text-slate-900 mb-4">Template Summary</h2>
+                            <div class="space-y-4">
+                                <div>
+                                    <h3 class="text-md font-semibold text-slate-700 mb-2">Total Questions</h3>
+                                    <p id="total-questions" class="text-3xl font-bold text-indigo-600">0</p>
+                                </div>
+                                <div>
+                                    <h3 class="text-md font-semibold text-slate-700 mb-2">Categories in Use</h3>
+                                     <div id="category-summary" class="flex flex-wrap gap-2">
+                                        <p class="text-slate-400 text-sm">No questions added yet.</p>
+                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for Delete Confirmation -->
+    <div id="delete-modal" class="fixed inset-0 bg-slate-900 bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-white rounded-xl shadow-2xl p-6 w-full max-w-md page-fade-in">
+            <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center">
+                    <i class="w-6 h-6" data-lucide="alert-triangle"></i>
+                </div>
+                <div>
+                    <h2 class="text-lg font-bold text-slate-900">Delete Template</h2>
+                    <p class="mt-1 text-slate-600">Are you sure you want to delete this template? This action cannot be undone.</p>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-3">
+                <button id="cancel-delete-btn" class="bg-white text-slate-700 font-semibold py-2 px-4 rounded-lg shadow-sm border border-slate-300 hover:bg-slate-50 transition-colors">Cancel</button>
+                <button id="confirm-delete-btn" class="bg-red-600 text-white font-semibold py-2 px-4 rounded-lg shadow-sm hover:bg-red-700 transition-colors">Delete</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // --- STATE MANAGEMENT ---
+        let templates = JSON.parse(localStorage.getItem('ra-templates')) || [];
+        let currentEditingTemplateId = null;
+        let questionIdCounter = 1;
+        let currentQuestions = [];
+        let templateIdToDelete = null;
+
+        // --- CONFIGURATION ---
+        const ehsTypes = {
+            Safety: { icon: 'shield', color: 'blue', label: 'Safety Hazard' },
+            Health: { icon: 'heart-pulse', color: 'purple', label: 'Health Hazard' },
+            Environmental: { icon: 'leaf', color: 'green', label: 'Environmental Aspect' }
+        };
+
+        // --- DOM ELEMENT REFERENCES ---
+        const listingPage = document.getElementById('listing-page');
+        const builderPage = document.getElementById('builder-page');
+        const templatesGrid = document.getElementById('templates-grid');
+        const listingEmptyState = document.getElementById('listing-empty-state');
+        const createNewBtn = document.getElementById('create-new-template-btn');
+        const createFirstBtn = document.getElementById('create-first-template-btn');
+        const backToListBtn = document.getElementById('back-to-list-btn');
+        const saveTemplateBtn = document.getElementById('save-template-button');
+        const addQuestionButton = document.getElementById('add-question-button');
+        const questionsContainer = document.getElementById('questions-container');
+        const builderEmptyState = document.getElementById('builder-empty-state');
+        const builderTitle = document.getElementById('builder-title');
+        const templateNameInput = document.getElementById('template-name');
+        const templateDescInput = document.getElementById('template-description');
+        const templateNameError = document.getElementById('template-name-error');
+        const deleteModal = document.getElementById('delete-modal');
+        const cancelDeleteBtn = document.getElementById('cancel-delete-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+
+        // --- HELPER FUNCTIONS ---
+        const refreshIcons = () => {
+            // This function safely calls lucide.createIcons(), preventing errors
+            // if the lucide library hasn't loaded yet. This can happen on slow connections.
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        };
+
+        // --- PAGE NAVIGATION ---
+        const showListingPage = () => {
+            builderPage.classList.add('hidden');
+            listingPage.classList.remove('hidden');
+            listingPage.classList.add('page-fade-in');
+            renderTemplatesList();
+        };
+
+        const showBuilderPage = (templateId = null) => {
+            listingPage.classList.add('hidden');
+            builderPage.classList.remove('hidden');
+            builderPage.classList.add('page-fade-in');
+            resetBuilder();
+
+            if (templateId !== null) {
+                currentEditingTemplateId = templateId;
+                const template = templates.find(t => t.id === templateId);
+                if (template) {
+                    builderTitle.textContent = 'Edit Template';
+                    templateNameInput.value = template.name;
+                    templateDescInput.value = template.description;
+                    currentQuestions = JSON.parse(JSON.stringify(template.questions)); // Deep copy
+                    questionIdCounter = Math.max(0, ...currentQuestions.map(q => q.id)) + 1;
+                }
+            } else {
+                currentEditingTemplateId = null;
+                builderTitle.textContent = 'Create New Template';
+            }
+            renderAllQuestionCards();
+        };
+
+        // --- MODAL LOGIC ---
+        const showDeleteModal = (templateId) => {
+            templateIdToDelete = templateId;
+            deleteModal.classList.remove('hidden');
+            refreshIcons();
+        };
+
+        const hideDeleteModal = () => {
+            templateIdToDelete = null;
+            deleteModal.classList.add('hidden');
+        };
+
+        const confirmDelete = () => {
+            if (templateIdToDelete !== null) {
+                templates = templates.filter(t => t.id !== templateIdToDelete);
+                saveTemplatesToLocalStorage();
+                renderTemplatesList();
+            }
+            hideDeleteModal();
+        };
+
+        // --- LOCAL STORAGE ---
+        const saveTemplatesToLocalStorage = () => {
+            localStorage.setItem('ra-templates', JSON.stringify(templates));
+        };
+
+        // --- LISTING PAGE LOGIC ---
+        const renderTemplatesList = () => {
+            templatesGrid.innerHTML = '';
+            if (templates.length === 0) {
+                listingEmptyState.classList.remove('hidden');
+                templatesGrid.classList.add('hidden');
+            } else {
+                listingEmptyState.classList.add('hidden');
+                templatesGrid.classList.remove('hidden');
+                templates.forEach(template => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md hover:-translate-y-1 transition-all';
+                    card.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-bold text-slate-900 truncate">${template.name}</h3>
+                            <p class="text-slate-500 text-sm mt-1 h-10 overflow-hidden">${template.description}</p>
+                            <div class="mt-4 pt-4 border-t border-slate-100 flex items-center gap-4 text-sm text-slate-600">
+                                <span class="flex items-center gap-2"><i class="w-4 h-4 text-indigo-500" data-lucide="list-checks"></i>${template.questions.length} Questions</span>
+                            </div>
+                        </div>
+                        <div class="mt-6 flex items-center gap-2">
+                            <button data-action="edit" data-id="${template.id}" class="w-full bg-indigo-50 text-indigo-700 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-100 transition-colors flex items-center gap-2 justify-center">
+                                <i class="w-4 h-4" data-lucide="edit-3"></i>Edit
+                            </button>
+                            <button data-action="delete" data-id="${template.id}" class="flex-shrink-0 bg-red-50 text-red-700 font-semibold p-2 rounded-lg hover:bg-red-100 transition-colors">
+                                <i class="w-5 h-5" data-lucide="trash-2"></i>
+                            </button>
+                        </div>
+                    `;
+                    templatesGrid.appendChild(card);
+                });
+            }
+            refreshIcons();
+        };
+        
+        const handleListingInteraction = (e) => {
+            const button = e.target.closest('button');
+            if (!button) return;
+            
+            const action = button.dataset.action;
+            const id = parseInt(button.dataset.id, 10);
+
+            if (action === 'edit') {
+                showBuilderPage(id);
+            } else if (action === 'delete') {
+                showDeleteModal(id);
+            }
+        };
+
+        // --- BUILDER PAGE LOGIC ---
+        const resetBuilder = () => {
+            currentEditingTemplateId = null;
+            currentQuestions = [];
+            questionIdCounter = 1;
+            templateNameInput.value = '';
+            templateDescInput.value = '';
+            templateNameInput.classList.remove('border-red-500');
+            templateNameError.classList.add('hidden');
+            renderAllQuestionCards();
+        };
+
+        const renderAllQuestionCards = () => {
+            if (currentQuestions.length === 0) {
+                builderEmptyState.classList.remove('hidden');
+                questionsContainer.innerHTML = '';
+                questionsContainer.appendChild(builderEmptyState);
+            } else {
+                builderEmptyState.classList.add('hidden');
+                questionsContainer.innerHTML = currentQuestions.map(item => renderCardHTML(item)).join('');
+            }
+            updateSummary();
+            refreshIcons();
+        };
+        
+        const renderCardHTML = (item) => {
+            const typeInfo = ehsTypes[item.type];
+            return `
+            <details class="question-card bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden" data-id="${item.id}" open>
+                <summary class="p-4 flex justify-between items-center bg-white hover:bg-slate-50 transition-colors">
+                    <div class="flex-1 flex items-center gap-3">
+                        <span class="flex-shrink-0 w-8 h-8 rounded-full bg-${typeInfo.color}-100 text-${typeInfo.color}-600 flex items-center justify-center"><i class="w-5 h-5" data-lucide="${typeInfo.icon}"></i></span>
+                        <input type="text" data-field="question" value="${item.question}" class="text-md font-semibold text-slate-800 w-full border-none focus:ring-0 p-1 bg-transparent" placeholder="Type the question or item to assess...">
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <button data-action="delete-question" class="p-1 text-slate-400 hover:text-red-600 transition-colors"><i class="w-5 h-5" data-lucide="trash-2"></i></button>
+                        <div class="arrow text-slate-400"><i class="w-6 h-6" data-lucide="chevron-right"></i></div>
+                    </div>
+                </summary>
+                <div class="p-6 border-t border-slate-200 bg-slate-50/50 space-y-4">
+                    <div>
+                        <label for="category-${item.id}" class="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                        <select id="category-${item.id}" data-field="type" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm">
+                            <option value="Safety" ${item.type === 'Safety' ? 'selected' : ''}>Safety Hazard</option>
+                            <option value="Health" ${item.type === 'Health' ? 'selected' : ''}>Health Hazard</option>
+                            <option value="Environmental" ${item.type === 'Environmental' ? 'selected' : ''}>Environmental Aspect</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="aspect-${item.id}" class="block text-sm font-medium text-slate-700 mb-1">Aspect (The Cause)</label>
+                        <textarea id="aspect-${item.id}" data-field="aspect" rows="2" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm" placeholder="Describe the cause...">${item.aspect}</textarea>
+                    </div>
+                    <div>
+                        <label for="impact-${item.id}" class="block text-sm font-medium text-slate-700 mb-1">Impact (The Potential Effect)</label>
+                        <textarea id="impact-${item.id}" data-field="impact" rows="2" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm" placeholder="Describe the potential effect...">${item.impact}</textarea>
+                    </div>
+                    <div>
+                        <label for="controls-${item.id}" class="block text-sm font-medium text-slate-700 mb-1">Guidance on Existing Controls</label>
+                        <textarea id="controls-${item.id}" data-field="controls" rows="3" class="w-full p-2 border border-slate-300 rounded-md shadow-sm text-sm" placeholder="Provide examples of typical controls...">${item.controls}</textarea>
+                    </div>
+                </div>
+            </details>`;
+        };
+
+        const updateSummary = () => {
+            document.getElementById('total-questions').textContent = currentQuestions.length;
+            const categorySummaryEl = document.getElementById('category-summary');
+            if (currentQuestions.length === 0) {
+                categorySummaryEl.innerHTML = `<p class="text-slate-400 text-sm">No questions added yet.</p>`;
+                return;
+            }
+            const usedCategories = [...new Set(currentQuestions.map(item => item.type))];
+            categorySummaryEl.innerHTML = usedCategories.map(type => {
+                const typeInfo = ehsTypes[type];
+                return `<span class="font-semibold text-sm py-1 px-3 rounded-full bg-${typeInfo.color}-100 text-${typeInfo.color}-700 flex items-center gap-1.5">
+                            <i class="w-4 h-4" data-lucide="${typeInfo.icon}"></i>
+                            ${type}
+                        </span>`;
+            }).join('');
+            refreshIcons();
+        };
+
+        const handleAddQuestion = () => {
+            const newItem = {
+                id: questionIdCounter++,
+                question: "", type: "Safety", aspect: "", impact: "", controls: ""
+            };
+            currentQuestions.push(newItem);
+            renderAllQuestionCards();
+            const newCard = questionsContainer.querySelector(`[data-id='${newItem.id}']`);
+            if (newCard) {
+                newCard.classList.add('new-card-animation');
+                newCard.querySelector('input[data-field="question"]').focus();
+            }
+        };
+
+        const handleCardInteraction = (e) => {
+            const card = e.target.closest('.question-card');
+            if (!card) return;
+            const id = parseInt(card.dataset.id, 10);
+            const questionItem = currentQuestions.find(item => item.id === id);
+            if (!questionItem) return;
+
+            if (e.target.closest('[data-action="delete-question"]')) {
+                currentQuestions = currentQuestions.filter(item => item.id !== id);
+                renderAllQuestionCards();
+                return;
+            }
+
+            const field = e.target.dataset.field;
+            if (field) {
+                questionItem[field] = e.target.value;
+                if (field === 'type') {
+                    renderAllQuestionCards();
+                }
+            }
+        };
+        
+        const handleSaveTemplate = () => {
+            templateNameInput.classList.remove('border-red-500');
+            templateNameError.classList.add('hidden');
+
+            const name = templateNameInput.value.trim();
+            const description = templateDescInput.value.trim();
+            if (!name) {
+                templateNameInput.classList.add('border-red-500');
+                templateNameError.classList.remove('hidden');
+                templateNameInput.focus();
+                return;
+            }
+
+            if (currentEditingTemplateId !== null) {
+                const templateIndex = templates.findIndex(t => t.id === currentEditingTemplateId);
+                if (templateIndex > -1) {
+                    templates[templateIndex] = { ...templates[templateIndex], name, description, questions: currentQuestions };
+                }
+            } else {
+                const newTemplate = { id: Date.now(), name, description, questions: currentQuestions };
+                templates.push(newTemplate);
+            }
+            
+            saveTemplatesToLocalStorage();
+            showListingPage();
+        };
+
+        // --- EVENT LISTENERS ---
+        // Navigation
+        createNewBtn.addEventListener('click', () => showBuilderPage());
+        createFirstBtn.addEventListener('click', () => showBuilderPage());
+        backToListBtn.addEventListener('click', showListingPage);
+        
+        // Modal
+        cancelDeleteBtn.addEventListener('click', hideDeleteModal);
+        confirmDeleteBtn.addEventListener('click', confirmDelete);
+        
+        // Listing Page
+        templatesGrid.addEventListener('click', handleListingInteraction);
+        
+        // Builder Page
+        saveTemplateBtn.addEventListener('click', handleSaveTemplate);
+        addQuestionButton.addEventListener('click', handleAddQuestion);
+        questionsContainer.addEventListener('input', handleCardInteraction);
+        questionsContainer.addEventListener('change', handleCardInteraction);
+        questionsContainer.addEventListener('click', handleCardInteraction);
+        
+        // --- INITIALIZATION ---
+        showListingPage();
+    });
+    </script>
+</body>
+</html>
